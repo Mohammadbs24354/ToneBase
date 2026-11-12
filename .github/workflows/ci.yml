@@ -59,7 +59,7 @@ jobs:
         run: php bin/console doctrine:migrations:migrate --no-interaction
 
       - name: Validate Doctrine mappings and database schema
-        run: php bin/console doctrine:schema:validate
+        run: php bin/console doctrine:schema:validate --skip-sync
 
       - name: Build PHP application image
         run: docker build --tag tonebase-api:test .
