@@ -98,6 +98,7 @@ final class CatalogController
     public function presets(Request $request): JsonResponse
     {
         $items = $this->em->getRepository(Preset::class)->findBy(['status' => 'published'], ['name' => 'ASC']);
+        $items = array_values(array_filter($items, fn (Preset $preset) => $preset->getLibrary()->getStatus() === 'published' && $preset->getLibrary()->getVisibility() === 'public'));
         return $this->collection(array_map(fn (Preset $x) => [
             'id' => $x->getId(), 'name' => $x->getName(), 'description' => $x->getDescription(),
             'instrumentId' => $x->getInstrument()->getId(), 'libraryId' => $x->getLibrary()->getId(), 'settings' => $x->getSettings(),
