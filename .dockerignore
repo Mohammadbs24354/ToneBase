@@ -11,6 +11,8 @@
 /.phpunit.cache
 /.phpunit.result.cache
 /node_modules
+/admin/node_modules
+/admin/dist
 /tests
 /docs
 *.log
