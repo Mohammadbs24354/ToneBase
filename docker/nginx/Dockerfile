@@ -14,4 +14,6 @@ COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY public/ /var/www/html/public/
 COPY --from=admin-build /app/dist/ /var/www/html/public/admin/
 
+RUN nginx -t && test -s /var/www/html/public/admin/index.html
+
 EXPOSE 80
