@@ -9,7 +9,11 @@ services:
       APP_ENV: ${APP_ENV:-prod}
       APP_DEBUG: ${APP_DEBUG:-0}
       APP_SECRET: ${APP_SECRET:?Set APP_SECRET in your .env file}
+      API_ADMIN_TOKEN: ${API_ADMIN_TOKEN:?Set API_ADMIN_TOKEN in your .env file}
       DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in your .env file}
+      AUDIO_STORAGE_PATH: /var/lib/tonebase/audio
+    volumes:
+      - tonebase_audio:/var/lib/tonebase/audio
     depends_on:
       database:
         condition: service_healthy
@@ -23,7 +27,7 @@ services:
     image: tonebase-web:local
     restart: unless-stopped
     ports:
-      - "${HTTP_PORT:-8080}:80"
+      - "127.0.0.1:${HTTP_PORT:-8080}:80"
     depends_on:
       - app
     healthcheck:
@@ -52,8 +56,25 @@ services:
     networks:
       - tonebase-internal
 
+  migrate:
+    image: tonebase-api:local
+    profiles: ["tools"]
+    environment:
+      APP_ENV: prod
+      APP_DEBUG: "0"
+      APP_SECRET: ${APP_SECRET:?Set APP_SECRET in your .env file}
+      API_ADMIN_TOKEN: ${API_ADMIN_TOKEN:?Set API_ADMIN_TOKEN in your .env file}
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in your .env file}
+    command: ["php", "bin/console", "doctrine:migrations:migrate", "--no-interaction"]
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - tonebase-internal
+
 volumes:
   tonebase_database:
+  tonebase_audio:
 
 networks:
   tonebase-internal:
