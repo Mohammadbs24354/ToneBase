@@ -25,10 +25,6 @@ final class AdminWriteGuardSubscriber implements EventSubscriberInterface
             return;
         }
 
-        if (in_array($request->getMethod(), ['GET', 'HEAD', 'OPTIONS'], true)) {
-            return;
-        }
-
         $configuredToken = (string) ($_ENV['API_ADMIN_TOKEN'] ?? $_SERVER['API_ADMIN_TOKEN'] ?? getenv('API_ADMIN_TOKEN') ?: '');
         if ($configuredToken === '') {
             $event->setResponse(new JsonResponse(['error' => 'Admin API is not configured.'], 503));
