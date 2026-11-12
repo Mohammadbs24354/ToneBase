@@ -160,6 +160,33 @@ final class CatalogController
         return $this->item(['id' => $entity->getId(), 'name' => $entity->getName(), 'status' => $entity->getStatus()], 201);
     }
 
+    #[Route('/admin/samples/{id}/status', requirements: ['id' => '\\d+'], methods: ['PATCH'])]
+    public function updateSampleStatus(int $id, Request $request): JsonResponse
+    {
+        $sample = $this->em->getRepository(AudioSample::class)->find($id);
+        if (!$sample) return $this->error('Sample not found.', 404);
+
+        $data = $this->payload($request);
+        $status = $data['status'] ?? '';
+        if (!in_array($status, ['pending_review', 'published', 'rejected'], true)) {
+            return $this->error('status must be pending_review, published, or rejected.', 422);
+        }
+
+        if ($status === 'published') {
+            if (!$sample->getLicense()->allowsRedistribution()) {
+                return $this->error('This license does not permit redistribution; the sample cannot be published.', 422);
+            }
+            if ($sample->getLicense()->isAttributionRequired() && !$sample->getSource()->getAttributionText()) {
+                return $this->error('Attribution text is required by this license before publication.', 422);
+            }
+        }
+
+        $sample->setStatus($status);
+        $this->em->flush();
+
+        return $this->item(['id' => $sample->getId(), 'status' => $sample->getStatus()]);
+    }
+
     private function payload(Request $request): array
     {
         try { $data = $request->toArray(); return is_array($data) ? $data : []; }
