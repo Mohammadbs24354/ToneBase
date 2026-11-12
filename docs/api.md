@@ -14,7 +14,8 @@ All responses use JSON. Collection responses contain `data` and `meta` with `pag
 | GET | `/instruments` | Active instruments; optional `familyId` |
 | GET | `/libraries` | Published public sound libraries |
 | GET | `/presets` | Published presets |
-| GET | `/samples` | Published samples; optional `instrumentId` and `libraryId` |
+| GET | `/samples` | Published samples in public libraries; optional `instrumentId` and `libraryId` |
+| GET | `/samples/{id}/audio` | Stream a published audio asset |
 
 ## Admin write endpoints
 
@@ -29,6 +30,8 @@ All admin write endpoints require `Authorization: Bearer <API_ADMIN_TOKEN>`.
 | POST | `/admin/sources` | Register an audio source |
 | POST | `/admin/licenses` | Register an audio license |
 | POST | `/admin/uploads` | Upload an audio file as multipart field `file` |
+| GET | `/admin/sources` | List registered audio sources |
+| GET | `/admin/licenses` | List registered audio licenses |
 | POST | `/admin/samples` | Register sample metadata using a previously uploaded `storageKey` |
 | PATCH | `/admin/samples/{id}/status` | Review, publish, or reject a sample; publishing enforces redistribution and attribution requirements |
 
@@ -39,7 +42,7 @@ All admin write endpoints require `Authorization: Bearer <API_ADMIN_TOKEN>`.
 3. Register metadata through `POST /admin/samples`, including instrument, library, source, and license IDs.
 4. Samples start as `pending_review`; only samples explicitly marked `published` are returned by the public endpoint. Use `PATCH /admin/samples/{id}/status` to review them. Publishing is blocked unless the license permits redistribution and required attribution text is present.
 
-Supported extensions: WAV, FLAC, OGG, MP3, SF2, SFZ. Files are stored outside the public web root. MIDI note mappings and sample metadata describe recorded audio; they are not MIDI event streams.
+Supported extensions: WAV, FLAC, OGG, MP3, SF2, SFZ. Upload size is limited to 100 MB. Published sample records include an `audioUrl` for playback/download. Files are stored outside the public web root. MIDI note mappings and sample metadata describe recorded audio; they are not MIDI event streams.
 
 ## Example: create a family
 
