@@ -8,10 +8,17 @@
     "ext-ctype": "*",
     "ext-iconv": "*",
     "ext-json": "*",
+    "ext-pdo": "*",
+    "doctrine/dbal": "^4.2",
+    "doctrine/doctrine-bundle": "^2.18",
+    "doctrine/doctrine-migrations-bundle": "^3.4",
+    "doctrine/orm": "^3.3",
     "symfony/console": "7.4.*",
     "symfony/dotenv": "7.4.*",
     "symfony/framework-bundle": "7.4.*",
     "symfony/runtime": "7.4.*",
+    "symfony/serializer": "7.4.*",
+    "symfony/validator": "7.4.*",
     "symfony/yaml": "7.4.*"
   },
   "require-dev": {
@@ -29,7 +36,8 @@
     }
   },
   "scripts": {
-    "test": "vendor/bin/phpunit"
+    "test": "vendor/bin/phpunit",
+    "analyse:container": "php bin/console lint:container"
   },
   "config": {
     "allow-plugins": {
