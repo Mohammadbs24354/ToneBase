@@ -24,6 +24,7 @@ COPY composer.json ./
 RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --no-autoloader
 
 COPY . .
+COPY .env.docker.example .env
 
 RUN composer dump-autoload --no-dev --classmap-authoritative \
     && mkdir -p var/cache var/log /var/lib/tonebase/audio \
