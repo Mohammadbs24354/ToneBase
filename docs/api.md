@@ -19,17 +19,22 @@ All responses use JSON. Collection responses contain `data` and `meta` with `pag
 
 ## Admin endpoints
 
-All admin write endpoints require `Authorization: Bearer <API_ADMIN_TOKEN>`.
+All `/admin/*` endpoints, including GET requests, require `Authorization: Bearer <API_ADMIN_TOKEN>`.
 
 | Method | Endpoint | Description |
 | --- | --- | --- |
 | POST | `/admin/families` | Create an instrument family |
 | POST | `/admin/instruments` | Create an instrument |
+| GET | `/admin/libraries` | List all libraries, including drafts and private libraries |
 | POST | `/admin/libraries` | Create a sound library |
+| GET | `/admin/presets` | List all presets |
 | POST | `/admin/presets` | Create a preset |
+| GET | `/admin/sources` | List registered audio sources |
 | POST | `/admin/sources` | Register an audio source |
+| GET | `/admin/licenses` | List registered audio licenses |
 | POST | `/admin/licenses` | Register an audio license |
 | POST | `/admin/uploads` | Upload an audio file as multipart field `file` |
+| GET | `/admin/samples` | List samples in all review states |
 | POST | `/admin/samples` | Register sample metadata using a previously uploaded `storageKey` |
 | PATCH | `/admin/samples/{id}/status` | Review, publish, or reject a sample; publishing enforces redistribution and attribution requirements |
 
