@@ -1,0 +1,15 @@
+/.env.local
+/.env.*.local
+/.phpunit.cache/
+/.phpunit.result.cache
+/.php-cs-fixer.cache
+/.phpunit-watcher.yml
+/.idea/
+/.vscode/
+/.php-version
+/vendor/
+/var/
+/public/bundles/
+/coverage/
+/.DS_Store
+Thumbs.db
