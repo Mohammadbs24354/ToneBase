@@ -16,7 +16,7 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.3'
           coverage: none
 
       - name: Validate Composer configuration
@@ -27,3 +27,9 @@ jobs:
 
       - name: Run tests
         run: composer test
+
+      - name: Build PHP application image
+        run: docker build --tag tonebase-api:test .
+
+      - name: Build Nginx image
+        run: docker build --file docker/nginx/Dockerfile --tag tonebase-web:test .
