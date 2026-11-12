@@ -72,6 +72,16 @@ final class CatalogController
         ], $items), $request);
     }
 
+    #[Route('/admin/libraries', methods: ['GET'])]
+    public function adminLibraries(Request $request): JsonResponse
+    {
+        $items = $this->em->getRepository(SoundLibrary::class)->findBy([], ['name' => 'ASC']);
+        return $this->collection(array_map(fn (SoundLibrary $x) => [
+            'id' => $x->getId(), 'name' => $x->getName(), 'slug' => $x->getSlug(),
+            'description' => $x->getDescription(), 'status' => $x->getStatus(), 'visibility' => $x->getVisibility(),
+        ], $items), $request);
+    }
+
     #[Route('/admin/libraries', methods: ['POST'])]
     public function createLibrary(Request $request): JsonResponse
     {
@@ -91,6 +101,18 @@ final class CatalogController
         return $this->collection(array_map(fn (Preset $x) => [
             'id' => $x->getId(), 'name' => $x->getName(), 'description' => $x->getDescription(),
             'instrumentId' => $x->getInstrument()->getId(), 'libraryId' => $x->getLibrary()->getId(), 'settings' => $x->getSettings(),
+        ], $items), $request);
+    }
+
+    #[Route('/admin/presets', methods: ['GET'])]
+    public function adminPresets(Request $request): JsonResponse
+    {
+        $items = $this->em->getRepository(Preset::class)->findBy([], ['name' => 'ASC']);
+        return $this->collection(array_map(fn (Preset $x) => [
+            'id' => $x->getId(), 'name' => $x->getName(), 'description' => $x->getDescription(),
+            'instrumentId' => $x->getInstrument()->getId(), 'instrumentName' => $x->getInstrument()->getName(),
+            'libraryId' => $x->getLibrary()->getId(), 'libraryName' => $x->getLibrary()->getName(),
+            'settings' => $x->getSettings(), 'status' => $x->getStatus(),
         ], $items), $request);
     }
 
@@ -194,6 +216,21 @@ final class CatalogController
         $entity = new AudioLicense($data['name'], (bool) ($data['allowsRedistribution'] ?? false), (bool) ($data['attributionRequired'] ?? true), $data['identifier'] ?? null, $data['termsUrl'] ?? null);
         $this->em->persist($entity); $this->em->flush();
         return $this->item(['id' => $entity->getId(), 'name' => $entity->getName()], 201);
+    }
+
+    #[Route('/admin/samples', methods: ['GET'])]
+    public function adminSamples(Request $request): JsonResponse
+    {
+        $items = $this->em->getRepository(AudioSample::class)->findBy([], ['createdAt' => 'DESC']);
+        return $this->collection(array_map(fn (AudioSample $x) => [
+            'id' => $x->getId(), 'name' => $x->getName(), 'status' => $x->getStatus(),
+            'instrumentId' => $x->getInstrument()->getId(), 'instrumentName' => $x->getInstrument()->getName(),
+            'libraryId' => $x->getLibrary()->getId(), 'libraryName' => $x->getLibrary()->getName(),
+            'licenseId' => $x->getLicense()->getId(), 'licenseName' => $x->getLicense()->getName(),
+            'sourceId' => $x->getSource()->getId(), 'sourceName' => $x->getSource()->getName(),
+            'format' => $x->getFormat(), 'fileSizeBytes' => $x->getFileSizeBytes(),
+            'midiNote' => $x->getMidiNote(), 'octave' => $x->getOctave(),
+        ], $items), $request);
     }
 
     #[Route('/admin/samples', methods: ['POST'])]
