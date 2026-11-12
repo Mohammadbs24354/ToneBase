@@ -109,7 +109,7 @@ final class CatalogController
     public function streamSample(int $id): JsonResponse|BinaryFileResponse
     {
         $sample = $this->em->getRepository(AudioSample::class)->find($id);
-        if (!$sample || $sample->getStatus() !== 'published') {
+        if (!$sample || $sample->getStatus() !== 'published' || $sample->getLibrary()->getStatus() !== 'published' || $sample->getLibrary()->getVisibility() !== 'public') {
             return $this->error('Sample not found.', 404);
         }
 
@@ -142,6 +142,7 @@ final class CatalogController
         if ($request->query->getInt('instrumentId') > 0) $criteria['instrument'] = $this->em->getReference(Instrument::class, $request->query->getInt('instrumentId'));
         if ($request->query->getInt('libraryId') > 0) $criteria['library'] = $this->em->getReference(SoundLibrary::class, $request->query->getInt('libraryId'));
         $items = $this->em->getRepository(AudioSample::class)->findBy($criteria, ['name' => 'ASC']);
+        $items = array_values(array_filter($items, fn (AudioSample $sample) => $sample->getLibrary()->getStatus() === 'published' && $sample->getLibrary()->getVisibility() === 'public'));
         return $this->collection(array_map(fn (AudioSample $x) => [
             'id' => $x->getId(), 'name' => $x->getName(), 'audioUrl' => '/api/v1/samples/' . $x->getId() . '/audio', 'instrumentId' => $x->getInstrument()->getId(),
             'libraryId' => $x->getLibrary()->getId(), 'format' => $x->getFormat(),
@@ -150,6 +151,27 @@ final class CatalogController
             'rootNote' => $x->getRootNote(), 'sampleRate' => $x->getSampleRate(), 'durationMs' => $x->getDurationMs(),
             'articulation' => $x->getArticulation(),
         ], $items), $request);
+    }
+
+    #[Route('/admin/licenses', methods: ['GET'])]
+    public function licenses(): JsonResponse
+    {
+        $items = $this->em->getRepository(AudioLicense::class)->findBy([], ['name' => 'ASC']);
+        return $this->item(array_map(fn (AudioLicense $x) => [
+            'id' => $x->getId(), 'name' => $x->getName(), 'identifier' => $x->getIdentifier(),
+            'allowsRedistribution' => $x->allowsRedistribution(), 'attributionRequired' => $x->isAttributionRequired(),
+            'termsUrl' => $x->getTermsUrl(),
+        ], $items));
+    }
+
+    #[Route('/admin/sources', methods: ['GET'])]
+    public function sources(): JsonResponse
+    {
+        $items = $this->em->getRepository(AudioSource::class)->findBy([], ['name' => 'ASC']);
+        return $this->item(array_map(fn (AudioSource $x) => [
+            'id' => $x->getId(), 'name' => $x->getName(), 'sourceUrl' => $x->getSourceUrl(),
+            'attributionText' => $x->getAttributionText(),
+        ], $items));
     }
 
     #[Route('/admin/sources', methods: ['POST'])]
