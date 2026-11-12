@@ -210,6 +210,9 @@ final class CatalogController
             return $this->error('The uploaded file could not be verified. Upload it first and use the returned metadata.', 422);
         }
         if (!in_array(strtolower($data['format']), ['wav', 'flac', 'ogg', 'mp3', 'sf2', 'sfz'], true)) return $this->error('Unsupported audio format.', 422);
+        $metadataError = $this->validateSampleMetadata($data);
+        if ($metadataError !== null) return $this->error($metadataError, 422);
+
         $entity = new AudioSample($instrument, $library, $license, $source, $data['name'], $data['storageKey'], $data['format'], $fileSize, $data['checksumSha256']);
         if (!empty($data['presetId'])) {
             $preset = $this->em->getRepository(Preset::class)->find((int) $data['presetId']);
@@ -249,6 +252,37 @@ final class CatalogController
         $this->em->flush();
 
         return $this->item(['id' => $sample->getId(), 'status' => $sample->getStatus()]);
+    }
+
+    private function validateSampleMetadata(array $data): ?string
+    {
+        $ranges = [
+            'midiNote' => [0, 127],
+            'rootNote' => [0, 127],
+            'octave' => [-2, 10],
+            'velocityMin' => [1, 127],
+            'velocityMax' => [1, 127],
+            'sampleRate' => [8000, 384000],
+            'durationMs' => [1, 86400000],
+            'loopStart' => [0, 2147483647],
+            'loopEnd' => [1, 2147483647],
+        ];
+
+        foreach ($ranges as $field => [$minimum, $maximum]) {
+            if (!array_key_exists($field, $data) || $data[$field] === null) continue;
+            if (filter_var($data[$field], FILTER_VALIDATE_INT) === false || $data[$field] < $minimum || $data[$field] > $maximum) {
+                return sprintf('%s must be an integer between %d and %d.', $field, $minimum, $maximum);
+            }
+        }
+
+        if (isset($data['velocityMin'], $data['velocityMax']) && $data['velocityMin'] > $data['velocityMax']) {
+            return 'velocityMin cannot be greater than velocityMax.';
+        }
+        if (isset($data['loopStart'], $data['loopEnd']) && $data['loopEnd'] <= $data['loopStart']) {
+            return 'loopEnd must be greater than loopStart.';
+        }
+
+        return null;
     }
 
     private function payload(Request $request): array
