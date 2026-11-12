@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 final class AudioStorageService
 {
     private const ALLOWED_FORMATS = ['wav', 'flac', 'ogg', 'mp3', 'sf2', 'sfz'];
+    private const MAX_FILE_SIZE = 104857600;
 
     public function store(UploadedFile $file): array
     {
@@ -17,6 +18,23 @@ final class AudioStorageService
 
         if (!$file->isValid()) {
             throw new \RuntimeException('The uploaded file is invalid.');
+        }
+
+        if (($file->getSize() ?? 0) < 1 || ($file->getSize() ?? 0) > self::MAX_FILE_SIZE) {
+            throw new \InvalidArgumentException('Audio files must be between 1 byte and 100 MB.');
+        }
+
+        $mimeType = $file->getMimeType() ?: 'application/octet-stream';
+        $allowedMimeTypes = [
+            'wav' => ['audio/wav', 'audio/x-wav', 'audio/vnd.wave', 'application/octet-stream'],
+            'flac' => ['audio/flac', 'audio/x-flac', 'application/octet-stream'],
+            'ogg' => ['audio/ogg', 'application/ogg', 'application/octet-stream'],
+            'mp3' => ['audio/mpeg', 'audio/mp3', 'application/octet-stream'],
+            'sf2' => ['application/octet-stream', 'audio/x-soundfont'],
+            'sfz' => ['text/plain', 'application/octet-stream'],
+        ];
+        if (!in_array($mimeType, $allowedMimeTypes[$extension], true)) {
+            throw new \InvalidArgumentException('The uploaded file content does not match its extension.');
         }
 
         $directory = rtrim((string) ($_ENV['AUDIO_STORAGE_PATH'] ?? $_SERVER['AUDIO_STORAGE_PATH'] ?? '/var/lib/tonebase/audio'), '/');
@@ -38,7 +56,7 @@ final class AudioStorageService
             'format' => $extension,
             'fileSizeBytes' => filesize($path),
             'checksumSha256' => $checksum,
-            'mimeType' => mime_content_type($path) ?: 'application/octet-stream',
+            'mimeType' => mime_content_type($path) ?: $mimeType,
         ];
     }
 }
