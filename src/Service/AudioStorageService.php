@@ -9,6 +9,27 @@ final class AudioStorageService
     private const ALLOWED_FORMATS = ['wav', 'flac', 'ogg', 'mp3', 'sf2', 'sfz'];
     private const MAX_FILE_SIZE = 104857600;
 
+
+    public function matches(string $storageKey, string $checksum, string $format, int $size): bool
+    {
+        if (!preg_match('/^[a-f0-9]{32}\\.(wav|flac|ogg|mp3|sf2|sfz)$/', $storageKey)) {
+            return false;
+        }
+
+        $directory = rtrim((string) ($_ENV['AUDIO_STORAGE_PATH'] ?? $_SERVER['AUDIO_STORAGE_PATH'] ?? '/var/lib/tonebase/audio'), '/');
+        $path = $directory . '/' . $storageKey;
+        if (!is_file($path) || !is_readable($path)) {
+            return false;
+        }
+
+        $actualSize = filesize($path);
+        $actualChecksum = hash_file('sha256', $path);
+        return $actualSize === $size
+            && $actualChecksum !== false
+            && hash_equals(strtolower($checksum), strtolower($actualChecksum))
+            && pathinfo($storageKey, PATHINFO_EXTENSION) === strtolower($format);
+    }
+
     public function store(UploadedFile $file): array
     {
         $extension = strtolower($file->getClientOriginalExtension());
