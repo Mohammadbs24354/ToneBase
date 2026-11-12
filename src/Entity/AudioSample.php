@@ -32,8 +32,8 @@ class AudioSample
     private string $storageKey;
     #[ORM\Column(length: 12)]
     private string $format;
-    #[ORM\Column]
-    private int $fileSizeBytes;
+    #[ORM\Column(type: 'bigint')]
+    private string $fileSizeBytes;
     #[ORM\Column(length: 64)]
     private string $checksumSha256;
     #[ORM\Column(nullable: true)]
@@ -65,7 +65,7 @@ class AudioSample
     {
         $this->instrument = $instrument; $this->library = $library; $this->license = $license; $this->source = $source;
         $this->name = $name; $this->storageKey = $storageKey; $this->format = strtolower($format);
-        $this->fileSizeBytes = $fileSizeBytes; $this->checksumSha256 = strtolower($checksumSha256); $this->createdAt = new \DateTimeImmutable();
+        $this->fileSizeBytes = (string) $fileSizeBytes; $this->checksumSha256 = strtolower($checksumSha256); $this->createdAt = new \DateTimeImmutable();
     }
     public function getId(): ?int { return $this->id; }
     public function getInstrument(): Instrument { return $this->instrument; }
@@ -76,7 +76,7 @@ class AudioSample
     public function getName(): string { return $this->name; }
     public function getStorageKey(): string { return $this->storageKey; }
     public function getFormat(): string { return $this->format; }
-    public function getFileSizeBytes(): int { return $this->fileSizeBytes; }
+    public function getFileSizeBytes(): string { return $this->fileSizeBytes; }
     public function getChecksumSha256(): string { return $this->checksumSha256; }
     public function getMidiNote(): ?int { return $this->midiNote; }
     public function getOctave(): ?int { return $this->octave; }
