@@ -29,12 +29,7 @@
     }
   },
   "scripts": {
-    "auto-scripts": {
-      "cache:clear": "symfony-cmd"
-    },
-    "post-install-cmd": ["@auto-scripts"],
-    "post-update-cmd": ["@auto-scripts"],
-    "test": "php bin/phpunit"
+    "test": "vendor/bin/phpunit"
   },
   "config": {
     "allow-plugins": {
