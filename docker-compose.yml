@@ -1,0 +1,60 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tonebase-api:local
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-prod}
+      APP_DEBUG: ${APP_DEBUG:-0}
+      APP_SECRET: ${APP_SECRET:?Set APP_SECRET in your .env file}
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in your .env file}
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - tonebase-internal
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    image: tonebase-web:local
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    depends_on:
+      - app
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1/api/v1/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - tonebase-internal
+
+  database:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-tonebase}
+      POSTGRES_USER: ${POSTGRES_USER:-tonebase}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your .env file}
+    volumes:
+      - tonebase_database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tonebase} -d ${POSTGRES_DB:-tonebase}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tonebase-internal
+
+volumes:
+  tonebase_database:
+
+networks:
+  tonebase-internal:
+    driver: bridge
