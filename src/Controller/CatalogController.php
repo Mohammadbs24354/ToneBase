@@ -105,6 +105,36 @@ final class CatalogController
         return $this->item(['id' => $entity->getId(), 'name' => $entity->getName()], 201);
     }
 
+    #[Route('/samples/{id}/audio', requirements: ['id' => '\\d+'], methods: ['GET'])]
+    public function streamSample(int $id): JsonResponse|BinaryFileResponse
+    {
+        $sample = $this->em->getRepository(AudioSample::class)->find($id);
+        if (!$sample || $sample->getStatus() !== 'published') {
+            return $this->error('Sample not found.', 404);
+        }
+
+        $path = $this->audioStorage->resolvePath($sample->getStorageKey());
+        if (!$path) {
+            return $this->error('Audio asset is unavailable.', 404);
+        }
+
+        $mimeTypes = [
+            'wav' => 'audio/wav',
+            'flac' => 'audio/flac',
+            'ogg' => 'audio/ogg',
+            'mp3' => 'audio/mpeg',
+            'sf2' => 'application/octet-stream',
+            'sfz' => 'text/plain; charset=utf-8',
+        ];
+        $response = new BinaryFileResponse($path);
+        $response->headers->set('Content-Type', $mimeTypes[$sample->getFormat()] ?? 'application/octet-stream');
+        $response->headers->set('X-Content-Type-Options', 'nosniff');
+        $response->headers->set('Cache-Control', 'public, max-age=3600');
+        $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_INLINE, 'tonebase-sample-' . $sample->getId() . '.' . $sample->getFormat());
+
+        return $response;
+    }
+
     #[Route('/samples', methods: ['GET'])]
     public function samples(Request $request): JsonResponse
     {
@@ -113,7 +143,7 @@ final class CatalogController
         if ($request->query->getInt('libraryId') > 0) $criteria['library'] = $this->em->getReference(SoundLibrary::class, $request->query->getInt('libraryId'));
         $items = $this->em->getRepository(AudioSample::class)->findBy($criteria, ['name' => 'ASC']);
         return $this->collection(array_map(fn (AudioSample $x) => [
-            'id' => $x->getId(), 'name' => $x->getName(), 'instrumentId' => $x->getInstrument()->getId(),
+            'id' => $x->getId(), 'name' => $x->getName(), 'audioUrl' => '/api/v1/samples/' . $x->getId() . '/audio', 'instrumentId' => $x->getInstrument()->getId(),
             'libraryId' => $x->getLibrary()->getId(), 'format' => $x->getFormat(),
             'fileSizeBytes' => $x->getFileSizeBytes(), 'midiNote' => $x->getMidiNote(), 'octave' => $x->getOctave(),
             'velocityMin' => $x->getVelocityMin(), 'velocityMax' => $x->getVelocityMax(),
