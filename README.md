@@ -15,39 +15,52 @@ The project is designed to support Eastern, Western, acoustic, and electronic in
 
 ## Technology
 
-- **Backend:** PHP 8.2+ / Symfony 7.4
-- **Database:** PostgreSQL (planned)
-- **Audio storage:** S3-compatible object storage (planned)
+- **Backend:** PHP 8.3 / Symfony 7.4
+- **Database:** PostgreSQL 16
+- **Web server:** Nginx
+- **Runtime:** PHP-FPM
+- **Deployment:** Docker Engine and Docker Compose
 - **API:** REST, versioned under `/api/v1`
-- **Local infrastructure:** Docker Compose (planned)
 
-## Current status
+## Docker quick start
 
-The initial Symfony application foundation is being established.
+Requirements: Docker Engine and the Docker Compose plugin.
 
-Available endpoint:
+```bash
+cp .env.docker.example .env
+```
+
+Edit `.env` and replace the placeholder values with strong secrets. Keep `DATABASE_URL` synchronized with the PostgreSQL credentials.
+
+Start the application:
+
+```bash
+docker compose up -d --build
+```
+
+The API will be available at:
+
+```text
+http://localhost:8080/api/v1/health
+```
+
+Useful commands:
+
+```bash
+docker compose ps
+docker compose logs -f
+docker compose down
+```
+
+See [Docker deployment documentation](docs/docker.md) for server deployment and operational notes.
+
+## Current API endpoint
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | GET | `/api/v1/health` | API health check |
 
-## Getting started
-
-Requirements: PHP 8.2+, Composer, and Symfony CLI (optional).
-
-```bash
-composer install
-cp .env.example .env
-php -S 127.0.0.1:8000 -t public
-```
-
-Check the API:
-
-```bash
-curl http://127.0.0.1:8000/api/v1/health
-```
-
-## Core domain (planned)
+## Planned domain
 
 - Instrument families
 - Instruments
@@ -58,9 +71,13 @@ curl http://127.0.0.1:8000/api/v1/health
 - Licenses, sources, and attributions
 - API clients and access permissions
 
+## Architecture
+
+PostgreSQL stores catalog data and metadata, not audio binaries. Audio assets will be stored in persistent object storage and delivered through controlled URLs. Docker Compose currently provides the application, Nginx, and PostgreSQL services; object storage will be added when the audio asset module is implemented.
+
 ## Audio asset principles
 
-Audio binaries will not be stored directly in PostgreSQL. The database will hold metadata and storage keys, while the actual files will live in object storage. Each asset must retain its source and license information so redistribution rights can be checked.
+Every imported audio asset must record its source, license, attribution requirements, and redistribution permissions. An asset must not be published until its usage rights have been reviewed.
 
 ## Language
 
