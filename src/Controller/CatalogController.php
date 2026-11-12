@@ -173,7 +173,7 @@ final class CatalogController
             'fileSizeBytes' => $x->getFileSizeBytes(), 'midiNote' => $x->getMidiNote(), 'octave' => $x->getOctave(),
             'velocityMin' => $x->getVelocityMin(), 'velocityMax' => $x->getVelocityMax(),
             'rootNote' => $x->getRootNote(), 'sampleRate' => $x->getSampleRate(), 'durationMs' => $x->getDurationMs(),
-            'articulation' => $x->getArticulation(),
+            'loopStart' => $x->getLoopStart(), 'loopEnd' => $x->getLoopEnd(), 'articulation' => $x->getArticulation(),
         ], $items), $request);
     }
 
