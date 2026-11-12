@@ -9,6 +9,26 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: tonebase
+          POSTGRES_USER: tonebase
+          POSTGRES_PASSWORD: tonebase-ci-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U tonebase -d tonebase"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      APP_ENV: test
+      APP_SECRET: tonebase-ci-secret
+      API_ADMIN_TOKEN: tonebase-ci-admin-token
+      DATABASE_URL: postgresql://tonebase:tonebase-ci-password@127.0.0.1:5432/tonebase?serverVersion=16&charset=utf8
+      AUDIO_STORAGE_PATH: /tmp/tonebase-audio
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -18,6 +38,7 @@ jobs:
         with:
           php-version: '8.3'
           coverage: none
+          extensions: intl, pdo_pgsql, zip
 
       - name: Validate Composer configuration
         run: composer validate --no-check-publish
@@ -25,8 +46,20 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist
 
-      - name: Run tests
+      - name: Check PHP syntax
+        run: find src migrations tests -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Run unit tests
         run: composer test
+
+      - name: Validate Symfony container
+        run: php bin/console lint:container
+
+      - name: Run database migrations
+        run: php bin/console doctrine:migrations:migrate --no-interaction
+
+      - name: Validate Doctrine mappings and database schema
+        run: php bin/console doctrine:schema:validate
 
       - name: Build PHP application image
         run: docker build --tag tonebase-api:test .
