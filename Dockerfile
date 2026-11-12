@@ -18,14 +18,18 @@ WORKDIR /var/www/html
 
 ENV APP_ENV=prod
 ENV APP_DEBUG=0
+ENV AUDIO_STORAGE_PATH=/var/lib/tonebase/audio
 
 COPY composer.json ./
-RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
+RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --no-autoloader
 
 COPY . .
 
-RUN mkdir -p var/cache var/log \
-    && chown -R www-data:www-data var
+RUN composer dump-autoload --no-dev --classmap-authoritative \
+    && mkdir -p var/cache var/log /var/lib/tonebase/audio \
+    && chown -R www-data:www-data var /var/lib/tonebase
+
+COPY docker/php/conf.d/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 
 USER www-data
 
