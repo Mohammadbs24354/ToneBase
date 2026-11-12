@@ -17,7 +17,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/v1')]
 final class CatalogController
 {
-    public function __construct(private readonly EntityManagerInterface $em) {}
+    public function __construct(private readonly EntityManagerInterface $em, private readonly AudioStorageService $audioStorage) {}
 
     #[Route('/families', methods: ['GET'])]
     public function families(Request $request): JsonResponse
@@ -152,8 +152,19 @@ final class CatalogController
         foreach ([$instrument, $library, $license, $source] as $required) if (!$required) return $this->error('Valid instrumentId, libraryId, licenseId and sourceId are required.', 422);
         foreach (['name', 'storageKey', 'format', 'checksumSha256'] as $key) if (empty($data[$key])) return $this->error($key . ' is required.', 422);
         if (!preg_match('/^[a-f0-9]{64}$/i', $data['checksumSha256'])) return $this->error('checksumSha256 must be a SHA-256 hex digest.', 422);
+        $fileSize = (int) ($data['fileSizeBytes'] ?? 0);
+        if ($fileSize < 1 || !$this->audioStorage->matches($data['storageKey'], $data['checksumSha256'], strtolower($data['format']), $fileSize)) {
+            return $this->error('The uploaded file could not be verified. Upload it first and use the returned metadata.', 422);
+        }
         if (!in_array(strtolower($data['format']), ['wav', 'flac', 'ogg', 'mp3', 'sf2', 'sfz'], true)) return $this->error('Unsupported audio format.', 422);
-        $entity = new AudioSample($instrument, $library, $license, $source, $data['name'], $data['storageKey'], $data['format'], (int) ($data['fileSizeBytes'] ?? 0), $data['checksumSha256']);
+        $entity = new AudioSample($instrument, $library, $license, $source, $data['name'], $data['storageKey'], $data['format'], $fileSize, $data['checksumSha256']);
+        if (!empty($data['presetId'])) {
+            $preset = $this->em->getRepository(Preset::class)->find((int) $data['presetId']);
+            if (!$preset || $preset->getInstrument()->getId() !== $instrument->getId() || $preset->getLibrary()->getId() !== $library->getId()) {
+                return $this->error('presetId must belong to the selected instrument and library.', 422);
+            }
+            $entity->setPreset($preset);
+        }
         $entity->setMidiMapping($data['midiNote'] ?? null, $data['octave'] ?? null, $data['velocityMin'] ?? null, $data['velocityMax'] ?? null, $data['rootNote'] ?? null);
         $entity->setTechnicalMetadata($data['sampleRate'] ?? null, $data['durationMs'] ?? null, $data['loopStart'] ?? null, $data['loopEnd'] ?? null, $data['articulation'] ?? null);
         $this->em->persist($entity); $this->em->flush();
