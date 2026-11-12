@@ -10,6 +10,18 @@ final class AudioStorageService
     private const MAX_FILE_SIZE = 104857600;
 
 
+
+    public function resolvePath(string $storageKey): ?string
+    {
+        if (!preg_match('/^[a-f0-9]{32}\\.(wav|flac|ogg|mp3|sf2|sfz)$/', $storageKey)) {
+            return null;
+        }
+
+        $directory = rtrim((string) ($_ENV['AUDIO_STORAGE_PATH'] ?? $_SERVER['AUDIO_STORAGE_PATH'] ?? '/var/lib/tonebase/audio'), '/');
+        $path = $directory . '/' . $storageKey;
+        return is_file($path) && is_readable($path) ? $path : null;
+    }
+
     public function matches(string $storageKey, string $checksum, string $format, int $size): bool
     {
         if (!preg_match('/^[a-f0-9]{32}\\.(wav|flac|ogg|mp3|sf2|sfz)$/', $storageKey)) {
