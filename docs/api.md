@@ -9,6 +9,7 @@ All responses use JSON. Collection responses contain `data` and `meta` with `pag
 | Method | Endpoint | Description |
 | --- | --- | --- |
 | GET | `/health` | API liveness |
+| GET | `/health/ready` | Database readiness check |
 | GET | `/families` | Active instrument families |
 | GET | `/instruments` | Active instruments; optional `familyId` |
 | GET | `/libraries` | Published public sound libraries |
