@@ -17,7 +17,7 @@ All responses use JSON. Collection responses contain `data` and `meta` with `pag
 | GET | `/samples` | Published samples in public libraries; optional `instrumentId` and `libraryId` |
 | GET | `/samples/{id}/audio` | Stream a published audio asset |
 
-## Admin write endpoints
+## Admin endpoints
 
 All admin write endpoints require `Authorization: Bearer <API_ADMIN_TOKEN>`.
 
@@ -30,8 +30,6 @@ All admin write endpoints require `Authorization: Bearer <API_ADMIN_TOKEN>`.
 | POST | `/admin/sources` | Register an audio source |
 | POST | `/admin/licenses` | Register an audio license |
 | POST | `/admin/uploads` | Upload an audio file as multipart field `file` |
-| GET | `/admin/sources` | List registered audio sources |
-| GET | `/admin/licenses` | List registered audio licenses |
 | POST | `/admin/samples` | Register sample metadata using a previously uploaded `storageKey` |
 | PATCH | `/admin/samples/{id}/status` | Review, publish, or reject a sample; publishing enforces redistribution and attribution requirements |
 
