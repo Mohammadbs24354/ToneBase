@@ -64,8 +64,8 @@ final class Version20261112000100 extends AbstractMigration
             (20, 7, 'Electric Guitar', 'electric-guitar', NULL, 'electronic', NULL, TRUE, CURRENT_TIMESTAMP),
             (21, 7, 'Electric Bass', 'electric-bass', NULL, 'electronic', NULL, TRUE, CURRENT_TIMESTAMP),
             (22, 7, 'Synthesizer', 'synthesizer', NULL, 'electronic', NULL, TRUE, CURRENT_TIMESTAMP)");
-        $this->addSql("SELECT setval(pg_get_serial_sequence('instrument_families', 'id'), 7, TRUE)");
-        $this->addSql("SELECT setval(pg_get_serial_sequence('instruments', 'id'), 22, TRUE)");
+        $this->addSql("ALTER SEQUENCE instrument_families_id_seq RESTART WITH 8");
+        $this->addSql("ALTER SEQUENCE instruments_id_seq RESTART WITH 23");
         $this->addSql("ALTER TABLE instruments ADD CONSTRAINT FK_INSTRUMENT_FAMILY FOREIGN KEY (family_id) REFERENCES instrument_families (id) ON DELETE RESTRICT");
         $this->addSql("ALTER TABLE presets ADD CONSTRAINT FK_PRESET_INSTRUMENT FOREIGN KEY (instrument_id) REFERENCES instruments (id) ON DELETE CASCADE");
         $this->addSql("ALTER TABLE presets ADD CONSTRAINT FK_PRESET_LIBRARY FOREIGN KEY (library_id) REFERENCES sound_libraries (id) ON DELETE CASCADE");
